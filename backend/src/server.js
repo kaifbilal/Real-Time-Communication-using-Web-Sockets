@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const http = require('http');
+const WebSocket = require('ws');
 const auctionItems = require('./auctionitems.js');
 
 const app = express();
@@ -10,6 +12,21 @@ app.use(express.json());
 const PORT = 3000;
 
 const bidHistory = [];
+
+// Create a http server
+const server = http.createServer(app);
+// create a websocket server
+const wss = new WebSocket.Server({server});
+
+// WebSockets connection handler
+wss.on("connection", (ws) => {
+    console.log("New client connected");
+    ws.send(JSON.stringify(auctionItems));
+    ws.on("close", () => {
+        console.log("Client disconnected");
+    });
+});
+
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
@@ -58,6 +75,9 @@ app.post('/api/bids', (req, res) => {
    res.status(201).json(newBid);
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server UP & Running on port ${PORT}`);
+    console.log(`Websocket server running on ws://localhost:${PORT}`);
+    console.log(`Rest API running on http://localhost:${PORT}`);
 });
+
