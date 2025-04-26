@@ -1,3 +1,7 @@
+/**
+ * Default auction items for the auction house.
+*/
+
 const auctionItems = [
     {
         id: 1,
