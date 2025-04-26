@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import AuctionItemList from './components/AuctionItemList';
 
 
 
@@ -47,14 +48,40 @@ function App() {
         <h1>Live Auction Platform</h1>
       </Header>
       <MainContent>
-        <div style={{ flex: 1 }}>
-          <h2>Welcome to the Auction</h2>
-          <p>Bid on your favorite items!</p>
-        </div>
-        <div style={{ flex: 1 }}>
-          <h2>Current Auctions</h2>
-          <p>Check out the ongoing auctions.</p>
-        </div>
+        <AuctionItemList
+          items={[
+            {
+              id: 1,
+              name: 'Vintage Watch',
+              description: 'A classic timepiece from the 1960s',
+              startingBid: 100,
+              currentBid: 100,
+              bids: [],
+              auctionEndTime: '2024-12-31T23:59:59Z',
+          },
+          {
+              id: 2,
+              name: 'Antique Vase',
+              description: 'A beautiful vase from the Ming dynasty',
+              startingBid: 150,
+              currentBid: 150,
+              bids: [],
+              auctionEndTime: '2024-12-31T23:59:59Z',
+          },
+          {
+              id: 3,
+              name: 'Modern Art Painting',
+              description: 'A stunning piece of contemporary art',
+              startingBid: 200,
+              currentBid: 200,
+              bids: [],
+              auctionEndTime: '2024-12-31T23:59:59Z',
+            },
+          ]}
+          isLoading={false}
+          selectiedItemId={1}
+          onSelectItem={() => console.log('Item selected')}
+        />
       </MainContent>
       <Footer>
         <p>All rights reserved &copy; 2023</p>
