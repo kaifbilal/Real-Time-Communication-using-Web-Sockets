@@ -17,5 +17,11 @@ export interface AuctionItem {
 }
 
 
-
-
+export interface WebSocketMessage {
+    type: "INITIAL_DATA" | "BID_UPDATE" | "NEW_BID" | "ERROR" |
+    "HEARTBEAT";
+    items?: AuctionItem[]; 
+    item?: AuctionItem;
+    bid?: Bid;
+    message?: string;
+}

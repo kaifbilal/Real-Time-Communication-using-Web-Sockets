@@ -1,9 +1,11 @@
-import { use, useState } from 'react';
+import { useState } from 'react';
 import styled from 'styled-components';
 import {type AuctionItem} from './types/auction';
 import AuctionItemList from './components/AuctionItemList';
 import { fetchAllItems } from './services/api';
 import { useEffect } from 'react';
+import webSocketService from './services/websocketService';
+import AuctionItemDetail from './components/AuctionDetail';
 
 
 
@@ -25,6 +27,15 @@ const Header = styled.header`
  text-align: center;
 `;
 
+const ConnectionStatus = styled.div<{connected: boolean}>`
+display: inline-block;
+padding: 5px 10px;
+border-radius: 20px;
+font-size: 14px;
+margin-top: 10px;
+background-color: ${props => props.connected ? '#2ecc71' : '#e74c3c'};
+color: white;
+`;
 
 const MainContent = styled.div`
 display: flex;
@@ -59,6 +70,9 @@ function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<AuctionItem | null>(null);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [bidderName, setBidderName] = useState<string>('Anonymous');
+
   useEffect(() => {
     const loadItems = async () => {
       try {
@@ -77,17 +91,62 @@ function App() {
   }, []);
 
   useEffect(() => {
+    webSocketService.onConnect((connected) => {
+      setIsConnected(connected);
+
+      if (!connected) {
+        setError('WebSocket connection lost. Please refresh the page.');
+      } else {
+        setError(null);
+      }
+    });
+
+    webSocketService.onInitialData((items) => {
+      setItems(items);
+      if (!selectedItem && items.length > 0) {
+        setSelectedItem(items[0]);
+      }
+    });
+    webSocketService.onItemUpdate((updatedItem) => {
+      setItems((prevItems) =>
+        prevItems.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+      );
+
+      if (selectedItem && selectedItem.id === updatedItem.id) {
+        setSelectedItem(updatedItem);
+      }
+
+      webSocketService.onError((message) => {
+        setError(message);
+        setTimeout(() => setError(null), 5000);
+      });
+
+      
+    });
+
+    webSocketService.connect();
+
+    return () => {
+        webSocketService.disconnect();
+      };
+  }, []);
+
+  useEffect(() => {
     if (selectedItem) {
-      const updatedSelectedItem = items.find(item => item.id === selectedItem.id);
-      if (updatedSelectedItem) {
-        setSelectedItem(updatedSelectedItem);
+      const selected = items.find((item) => item.id === selectedItem.id);
+      if (selected) {
+        setSelectedItem(selected);
       }
     }
-  }, [selectedItem, items]);
+  }, [items, selectedItem]);
 
   const handleSelectItem = (item: AuctionItem) => {
     setSelectedItem(item);
   };
+
+    const handleBidderNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      setBidderName(event.target.value);
+    };
 
 
 
@@ -96,8 +155,24 @@ function App() {
     <AppContainer>
       <Header>
         <h1>Live Auction Platform</h1>
+        <ConnectionStatus connected={isConnected}>
+          {isConnected 
+          ? 'Connected to Live Updates' : 'Disconnected - Please Refresh'}
+        </ConnectionStatus>
       </Header>
       {error && <ErrorContent>{error}</ErrorContent>}
+            <div style={{marginBottom: '20px'}}>
+              <label htmlFor="bidderName" style={{ marginRight: "10px"}}>Your Name:{" "}</label>
+              <input
+              type="text"
+              id="bidderName"
+              value={bidderName}
+              onChange={handleBidderNameChange}
+              placeholder='Enter your name'
+              style={{padding: '5px', width: '200px', borderRadius: '4px', border: '1px solid #ccc'}}
+              />
+            </div>
+
       
       <MainContent>
         <AuctionItemList
@@ -106,6 +181,19 @@ function App() {
         selecteditemId={selectedItem?.id}
         onSelectItem={handleSelectItem}
         />
+
+        {
+          selectedItem && (
+            <AuctionItemDetail
+            item={selectedItem}
+            bidderName={bidderName}
+            websocketConnected={isConnected}
+
+            />
+          )
+        }
+
+
       </MainContent>
       <Footer>
         <p>All rights reserved &copy; 2023</p>
