@@ -1,5 +1,10 @@
+import { use, useState } from 'react';
 import styled from 'styled-components';
+import {type AuctionItem} from './types/auction';
 import AuctionItemList from './components/AuctionItemList';
+import { fetchAllItems } from './services/api';
+import { useEffect } from 'react';
+
 
 
 
@@ -29,6 +34,14 @@ gap: 20px;
   flex-direction: column;
 }
 `
+const ErrorContent = styled.div`
+padding: 10px;
+background-color: #f8d7da;
+color: #721c24;
+border-radius: 4px;
+margin-bottom: 20px;
+`
+
 
 const Footer = styled.footer`
 text-align: center;
@@ -42,45 +55,56 @@ font-size: 12px;
 
 
 function App() {
+  const[items, setItems] = useState<AuctionItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<AuctionItem | null>(null);
+  useEffect(() => {
+    const loadItems = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchAllItems();
+        setItems(data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching items:', error);
+        setError('Failed to load auction items. Please try again later.');
+        setIsLoading(false);
+      }
+    };
+
+    loadItems();
+  }, []);
+
+  useEffect(() => {
+    if (selectedItem) {
+      const updatedSelectedItem = items.find(item => item.id === selectedItem.id);
+      if (updatedSelectedItem) {
+        setSelectedItem(updatedSelectedItem);
+      }
+    }
+  }, [selectedItem, items]);
+
+  const handleSelectItem = (item: AuctionItem) => {
+    setSelectedItem(item);
+  };
+
+
+
+
   return (
     <AppContainer>
       <Header>
         <h1>Live Auction Platform</h1>
       </Header>
+      {error && <ErrorContent>{error}</ErrorContent>}
+      
       <MainContent>
         <AuctionItemList
-          items={[
-            {
-              id: 1,
-              name: 'Vintage Watch',
-              description: 'A classic timepiece from the 1960s',
-              startingBid: 100,
-              currentBid: 100,
-              bids: [],
-              auctionEndTime: '2024-12-31T23:59:59Z',
-          },
-          {
-              id: 2,
-              name: 'Antique Vase',
-              description: 'A beautiful vase from the Ming dynasty',
-              startingBid: 150,
-              currentBid: 150,
-              bids: [],
-              auctionEndTime: '2024-12-31T23:59:59Z',
-          },
-          {
-              id: 3,
-              name: 'Modern Art Painting',
-              description: 'A stunning piece of contemporary art',
-              startingBid: 200,
-              currentBid: 200,
-              bids: [],
-              auctionEndTime: '2024-12-31T23:59:59Z',
-            },
-          ]}
-          isLoading={false}
-          selectiedItemId={1}
-          onSelectItem={() => console.log('Item selected')}
+        items ={items} 
+        isLoading={isLoading}
+        selecteditemId={selectedItem?.id}
+        onSelectItem={handleSelectItem}
         />
       </MainContent>
       <Footer>

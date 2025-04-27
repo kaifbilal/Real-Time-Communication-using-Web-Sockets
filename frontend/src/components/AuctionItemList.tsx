@@ -63,12 +63,12 @@ font-size: 12px;
 type AuctionItemListProps = {
     items: AuctionItem[];
     isLoading: boolean;
-    selectiedItemId?: number;
+    selecteditemId?: number;
     onSelectItem: (item: AuctionItem) => void;
 
 };
 
-const AuctionItemList: React.FC<AuctionItemListProps> = ({ items, isLoading, selectiedItemId, onSelectItem }) => {
+const AuctionItemList: React.FC<AuctionItemListProps> = ({ items, isLoading, selecteditemId, onSelectItem }) => {
     if ( isLoading) {
         return (
             <ListContainer> 
@@ -85,7 +85,7 @@ const AuctionItemList: React.FC<AuctionItemListProps> = ({ items, isLoading, sel
             ):(
                 <ItemsList>
                     {items.map((item) => (
-                        <ItemCard key={item.id} selected={selectiedItemId === item.id} onClick={() => onSelectItem(item)}>
+                        <ItemCard key={item.id} selected={selecteditemId === item.id} onClick={() => onSelectItem(item)}>
                             <ItemName>{item.name}</ItemName>
                             <ItemDescription>{item.description}</ItemDescription>
                             <ItemPrice>Current Bid: ${item.currentBid}</ItemPrice>
